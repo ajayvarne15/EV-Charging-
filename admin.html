@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+            <h2 class="fw-bold mb-2">Admin Dashboard</h2>
+            <p class="text-secondary mb-0">
+                {{ station.station_name }} • {{ station.station_location }}
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <form method="POST" action="{{ url_for('admin_seed_data') }}">
+                <button class="btn btn-outline-info">Insert Demo Data</button>
+            </form>
+            <a href="{{ url_for('history') }}" class="btn btn-outline-light">History</a>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-xl-4">
+        <div class="metric-card h-100">
+            <div class="metric-label">Total Charging Sessions</div>
+            <div class="metric-value">{{ total_sessions }}</div>
+            <div class="metric-sub">All sessions recorded</div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-4">
+        <div class="metric-card h-100">
+            <div class="metric-label">Total Units Delivered</div>
+            <div class="metric-value">{{ total_units }} kWh</div>
+            <div class="metric-sub">Energy supplied to EVs</div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-xl-4">
+        <div class="metric-card h-100">
+            <div class="metric-label">Total Revenue</div>
+            <div class="metric-value">₹ {{ total_revenue }}</div>
+            <div class="metric-sub">Total billed amount</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="metric-card h-100">
+            <div class="metric-label">Active Charging</div>
+            <div class="metric-value text-warning">{{ active_sessions }}</div>
+            <div class="metric-sub">Currently charging</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="metric-card h-100">
+            <div class="metric-label">Completed Sessions</div>
+            <div class="metric-value text-success">{{ completed_sessions }}</div>
+            <div class="metric-sub">Reached target battery %</div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="metric-card h-100">
+            <div class="metric-label">Stopped Sessions</div>
+            <div class="metric-value text-danger">{{ stopped_sessions }}</div>
+            <div class="metric-sub">Stopped manually</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold mb-3">Session Status Distribution</h5>
+            <canvas id="statusChart"
+                data-charging="{{ status_counts['Charging'] }}"
+                data-full="{{ status_counts['Full'] }}"
+                data-stopped="{{ status_counts['Stopped'] }}">
+            </canvas>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold mb-3">Top Vehicles by Units Charged</h5>
+            <canvas id="vehicleChart"
+                data-labels='{{ vehicle_rows | map(attribute="vehicle_name") | list | tojson }}'
+                data-values='{{ vehicle_rows | map(attribute="total_units") | list | tojson }}'>
+            </canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="glass-card p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0">Recent Sessions</h5>
+                <a href="{{ url_for('history') }}" class="btn btn-sm btn-outline-light">View All</a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0 ev-table">
+                    <thead>
+                        <tr>
+                            <th>Session ID</th>
+                            <th>Vehicle</th>
+                            <th>Battery %</th>
+                            <th>Units</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Started</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_sessions %}
+                            {% for s in recent_sessions %}
+                            <tr>
+                                <td>#{{ s.id }}</td>
+                                <td>{{ s.vehicle_name }}</td>
+                                <td>{{ s.current_battery_percent }} / {{ s.target_battery_percent }}%</td>
+                                <td>{{ s.units_consumed }} kWh</td>
+                                <td>₹ {{ s.amount }}</td>
+                                <td>
+                                    {% if s.status == 'Charging' %}
+                                        <span class="badge bg-warning text-dark">Charging</span>
+                                    {% elif s.status == 'Full' %}
+                                        <span class="badge bg-success">Full</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Stopped</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ s.start_time }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-secondary">No sessions available.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="glass-card p-4">
+            <h5 class="fw-bold mb-3">Station Settings</h5>
+            <form method="POST" action="{{ url_for('update_station_settings') }}" class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Station Name</label>
+                    <input type="text" name="station_name" class="form-control ev-input" value="{{ station.station_name }}" required>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Station Location</label>
+                    <input type="text" name="station_location" class="form-control ev-input" value="{{ station.station_location }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Support Number</label>
+                    <input type="text" name="support_number" class="form-control ev-input" value="{{ station.support_number }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">GST / Station ID</label>
+                    <input type="text" name="gst_number" class="form-control ev-input" value="{{ station.gst_number }}" required>
+                </div>
+
+                <div class="col-12 d-grid mt-2">
+                    <button class="btn btn-ev-primary">Save Station Settings</button>
+                </div>
+            </form>
+
+            <div class="note-box mt-4">
+                These values appear on the receipt and admin dashboard, so you can brand the project for your college demo.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/admin_charts.js') }}"></script>
+{% endblock %}

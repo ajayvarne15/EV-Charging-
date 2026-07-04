@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Dashboard | Session #{{ session.id }}{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+            <h2 class="fw-bold mb-1">Live Charging Dashboard</h2>
+            <p class="text-secondary mb-0">
+                Session #{{ session.id }} • {{ session.vehicle_name }} ({{ session.vehicle_id }})
+            </p>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('history') }}" class="btn btn-outline-light">History</a>
+            <a href="{{ url_for('receipt', session_id=session.id) }}" class="btn btn-outline-info">View Receipt</a>
+
+            {% if session.status == 'Charging' %}
+            <form method="POST" action="{{ url_for('stop_charging', session_id=session.id) }}">
+                <button type="submit" class="btn btn-danger">Stop Charging</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="session-dashboard"
+     data-session-id="{{ session.id }}"
+     data-api-url="{{ url_for('api_session', session_id=session.id) }}"
+     data-status="{{ session.status }}">
+
+    <div class="glass-card p-4 mb-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h4 class="fw-bold mb-1">{{ session.vehicle_name }}</h4>
+                <div class="text-secondary">
+                    Vehicle ID: <span id="vehicle_id">{{ session.vehicle_id }}</span>
+                    {% if session.owner_name %} • Owner: {{ session.owner_name }}{% endif %}
+                </div>
+            </div>
+
+            <div>
+                <span id="status_badge" class="badge fs-6 px-3 py-2
+                    {% if session.status == 'Charging' %}bg-warning text-dark
+                    {% elif session.status == 'Full' %}bg-success
+                    {% else %}bg-danger{% endif %}">
+                    {{ session.status }}
+                </span>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <div class="d-flex justify-content-between mb-2">
+                <span class="fw-semibold">Battery Progress</span>
+                <span class="fw-bold">
+                    <span id="current_battery_percent">{{ session.current_battery_percent }}</span>% /
+                    {{ session.target_battery_percent }}%
+                </span>
+            </div>
+
+            <div class="progress ev-progress">
+                <div id="batteryProgressBar"
+                     class="progress-bar progress-bar-striped progress-bar-animated"
+                     role="progressbar"
+                     style="width: {{ session.current_battery_percent }}%;">
+                    {{ session.current_battery_percent }}%
+                </div>
+            </div>
+
+            <div class="row mt-3 g-3">
+                <div class="col-md-6">
+                    <div class="mini-stat">
+                        <span>Battery Remaining to Target</span>
+                        <strong id="battery_remaining_percent">{{ (session.target_battery_percent - session.current_battery_percent)|round(2) }}%</strong>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mini-stat">
+                        <span>Battery Capacity</span>
+                        <strong>{{ session.battery_capacity }} kWh</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="metric-card h-100">
+                <div class="metric-label">Units Consumed</div>
+                <div class="metric-value"><span id="units_consumed">{{ session.units_consumed }}</span> kWh</div>
+                <div class="metric-sub">Live charged energy delivered</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="metric-card h-100">
+                <div class="metric-label">Units Left</div>
+                <div class="metric-value"><span id="units_left">{{ session.units_left }}</span> kWh</div>
+                <div class="metric-sub">Remaining energy to target</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="metric-card h-100">
+                <div class="metric-label">Current Bill Amount</div>
+                <div class="metric-value">₹ <span id="amount">{{ session.amount }}</span></div>
+                <div class="metric-sub">Live billing amount</div>
+            </div>
+        </div>
+
+        <div class="col-md-6 col-xl-3">
+            <div class="metric-card h-100">
+                <div class="metric-label">Estimated Time Left</div>
+                <div class="metric-value" id="time_left_text">{{ session.time_left_text }}</div>
+                <div class="metric-sub">Based on charger power</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="glass-card p-4 h-100">
+                <h5 class="fw-bold mb-3">Charging Session Details</h5>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-borderless align-middle ev-table">
+                        <tbody>
+                            <tr>
+                                <th>Session ID</th>
+                                <td>#{{ session.id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Vehicle Name</th>
+                                <td>{{ session.vehicle_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Vehicle ID</th>
+                                <td>{{ session.vehicle_id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Start Battery %</th>
+                                <td>{{ session.start_battery_percent }}%</td>
+                            </tr>
+                            <tr>
+                                <th>Current Battery %</th>
+                                <td><span id="current_battery_percent_table">{{ session.current_battery_percent }}</span>%</td>
+                            </tr>
+                            <tr>
+                                <th>Target Battery %</th>
+                                <td>{{ session.target_battery_percent }}%</td>
+                            </tr>
+                            <tr>
+                                <th>Charger Power</th>
+                                <td>{{ session.charger_power }} kW</td>
+                            </tr>
+                            <tr>
+                                <th>Price / Unit</th>
+                                <td>₹ {{ session.price_per_unit }}</td>
+                            </tr>
+                            <tr>
+                                <th>Estimated Total Time</th>
+                                <td>{{ session.estimated_total_hours }} hours</td>
+                            </tr>
+                            <tr>
+                                <th>Current Status</th>
+                                <td id="status_text">{{ session.status }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="glass-card p-4 h-100">
+                <h5 class="fw-bold mb-3">Timeline</h5>
+
+                <div class="timeline-item">
+                    <span class="timeline-label">Start Time</span>
+                    <strong id="start_time">{{ session.start_time }}</strong>
+                </div>
+
+                <div class="timeline-item">
+                    <span class="timeline-label">End Time</span>
+                    <strong id="end_time">{{ session.end_time if session.end_time else 'Charging in progress...' }}</strong>
+                </div>
+
+                <div class="timeline-item">
+                    <span class="timeline-label">Duration</span>
+                    <strong id="duration_text">{{ session.duration_text }}</strong>
+                </div>
+
+                <div class="timeline-item">
+                    <span class="timeline-label">Last Updated</span>
+                    <strong id="last_updated">{{ session.last_updated }}</strong>
+                </div>
+
+                <hr class="border-secondary my-4">
+
+                <div class="note-box">
+                    Charging updates automatically every few seconds using Flask API polling. When the target battery percentage is reached, the session status changes to <strong>Full</strong> automatically and the final receipt can be printed.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Receipt | Session #{{ session.id }}{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+    <div>
+        <h2 class="fw-bold mb-1">Charging Receipt</h2>
+        <p class="text-secondary mb-0">Session #{{ session.id }} • {{ session.vehicle_name }}</p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('dashboard', session_id=session.id) }}" class="btn btn-outline-light">Back to Dashboard</a>
+        <button onclick="window.print()" class="btn btn-ev-primary">Print Receipt</button>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="receipt-card p-4 p-md-5">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ station.station_name }}</h3>
+                    <p class="mb-1 text-secondary">{{ station.station_location }}</p>
+                    <p class="mb-0 text-secondary">Support: {{ station.support_number }}</p>
+                </div>
+                <div class="text-md-end">
+                    <div class="receipt-chip">Receipt</div>
+                    <div class="mt-2 text-secondary">GST / Station ID: {{ station.gst_number }}</div>
+                    <div class="text-secondary">Generated on {{ session.last_updated }}</div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="receipt-box">
+                        <div class="receipt-label">Session ID</div>
+                        <div class="receipt-value">#{{ session.id }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="receipt-box">
+                        <div class="receipt-label">Vehicle Name</div>
+                        <div class="receipt-value">{{ session.vehicle_name }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="receipt-box">
+                        <div class="receipt-label">Vehicle ID</div>
+                        <div class="receipt-value">{{ session.vehicle_id }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="receipt-box">
+                        <div class="receipt-label">Charging Status</div>
+                        <div class="receipt-value">{{ session.status }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive mb-4">
+                <table class="table table-dark table-borderless align-middle ev-table">
+                    <tbody>
+                        <tr>
+                            <th>Battery Charged</th>
+                            <td>{{ session.start_battery_percent }}% → {{ session.current_battery_percent }}%</td>
+                        </tr>
+                        <tr>
+                            <th>Target Battery</th>
+                            <td>{{ session.target_battery_percent }}%</td>
+                        </tr>
+                        <tr>
+                            <th>Total Units Consumed</th>
+                            <td>{{ session.units_consumed }} kWh</td>
+                        </tr>
+                        <tr>
+                            <th>Remaining Units</th>
+                            <td>{{ session.units_left }} kWh</td>
+                        </tr>
+                        <tr>
+                            <th>Charger Power Used</th>
+                            <td>{{ session.charger_power }} kW</td>
+                        </tr>
+                        <tr>
+                            <th>Price per Unit</th>
+                            <td>₹ {{ session.price_per_unit }}</td>
+                        </tr>
+                        <tr>
+                            <th>Total Charging Duration</th>
+                            <td>{{ session.duration_text }}</td>
+                        </tr>
+                        <tr>
+                            <th>Start Time</th>
+                            <td>{{ session.start_time }}</td>
+                        </tr>
+                        <tr>
+                            <th>End Time</th>
+                            <td>{{ session.end_time if session.end_time else 'Charging in progress...' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="receipt-total d-flex justify-content-between align-items-center">
+                <span>Total Bill Amount</span>
+                <strong>₹ {{ session.amount }}</strong>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

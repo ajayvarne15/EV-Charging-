@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Charging History{% endblock %}
+
+{% block content %}
+<div class="page-header mb-4">
+    <h2 class="fw-bold mb-2">Charging Session History</h2>
+    <p class="text-secondary mb-0">
+        View all charging sessions, filter by vehicle, status, and date, and open the receipt for any session.
+    </p>
+</div>
+
+<div class="glass-card p-4 mb-4">
+    <form method="GET" class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Search Vehicle / Vehicle ID</label>
+            <input type="text" name="vehicle" class="form-control ev-input" value="{{ request.args.get('vehicle', '') }}" placeholder="e.g. Nexon / EV-1001">
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select ev-input">
+                <option value="">All Status</option>
+                <option value="Charging" {% if request.args.get('status') == 'Charging' %}selected{% endif %}>Charging</option>
+                <option value="Full" {% if request.args.get('status') == 'Full' %}selected{% endif %}>Full</option>
+                <option value="Stopped" {% if request.args.get('status') == 'Stopped' %}selected{% endif %}>Stopped</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Date</label>
+            <input type="date" name="date" class="form-control ev-input" value="{{ request.args.get('date', '') }}">
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-ev-primary w-100">Filter</button>
+        </div>
+    </form>
+</div>
+
+<div class="glass-card p-0 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0 ev-table">
+            <thead>
+                <tr>
+                    <th>Session ID</th>
+                    <th>Vehicle</th>
+                    <th>Battery</th>
+                    <th>Units</th>
+                    <th>Amount</th>
+                    <th>Power</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Receipt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if sessions %}
+                    {% for s in sessions %}
+                    <tr>
+                        <td>#{{ s.id }}</td>
+                        <td>
+                            <div class="fw-semibold">{{ s.vehicle_name }}</div>
+                            <small class="text-secondary">{{ s.vehicle_id }}</small>
+                        </td>
+                        <td>{{ s.start_battery_percent }}% → {{ s.target_battery_percent }}%</td>
+                        <td>{{ s.units_consumed }} kWh</td>
+                        <td>₹ {{ s.amount }}</td>
+                        <td>{{ s.charger_power }} kW</td>
+                        <td>
+                            {% if s.status == 'Charging' %}
+                                <span class="badge bg-warning text-dark">Charging</span>
+                            {% elif s.status == 'Full' %}
+                                <span class="badge bg-success">Full</span>
+                            {% else %}
+                                <span class="badge bg-danger">Stopped</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ s.duration_text }}</td>
+                        <td>{{ s.start_time }}</td>
+                        <td>{{ s.end_time if s.end_time else '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('receipt', session_id=s.id) }}" class="btn btn-sm btn-outline-info">
+                                Receipt
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="11" class="text-center py-4 text-secondary">
+                            No charging sessions found.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    const hasChargingSession = {{ 'true' if sessions and (sessions | selectattr('status', 'equalto', 'Charging') | list | length > 0) else 'false' }};
+    if (hasChargingSession) {
+        setTimeout(() => {
+            window.location.reload();
+        }, 10000);
+    }
+</script>
+{% endblock %}

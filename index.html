@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Home | EV Charging System{% endblock %}
+
+{% block content %}
+<section class="hero-section rounded-4 p-4 p-md-5 mb-4">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-7">
+            <span class="badge bg-success-subtle text-success-emphasis mb-3 px-3 py-2">Simulation-Based Smart EV Dashboard</span>
+            <h1 class="display-5 fw-bold mb-3">
+                EV Vehicle Charging Monitoring & Billing System
+            </h1>
+            <p class="lead text-light-emphasis mb-4">
+                A production-style academic dashboard to simulate EV charging sessions in real time.
+                Monitor battery percentage, units consumed, amount billed, time left, charging status,
+                session history, and admin analytics — all in one system.
+            </p>
+
+            <div class="d-flex flex-wrap gap-3">
+                <a href="{{ url_for('start_charging') }}" class="btn btn-ev-primary btn-lg">
+                    Start Charging
+                </a>
+                <a href="{{ url_for('history') }}" class="btn btn-outline-light btn-lg">
+                    View History
+                </a>
+                <a href="{{ url_for('admin') }}" class="btn btn-outline-info btn-lg">
+                    Admin Dashboard
+                </a>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="glass-card p-4 h-100">
+                <h4 class="fw-bold mb-3">What this system shows</h4>
+                <div class="feature-list">
+                    <div class="feature-item">🔋 Battery percentage charged & remaining</div>
+                    <div class="feature-item">⚡ Units consumed (kWh) & units left</div>
+                    <div class="feature-item">💰 Live billing / charging amount</div>
+                    <div class="feature-item">⏱ Estimated time left to full charge</div>
+                    <div class="feature-item">📊 Charging status and progress tracking</div>
+                    <div class="feature-item">🧾 Session receipt & charging history</div>
+                    <div class="feature-item">📈 Admin dashboard with revenue summary</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row g-4">
+    <div class="col-md-4">
+        <div class="metric-card h-100">
+            <div class="metric-icon">⚡</div>
+            <h5>Real-Time Charging Simulation</h5>
+            <p class="mb-0">Battery %, units, bill amount, and time left update live using backend calculations + frontend polling.</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="metric-card h-100">
+            <div class="metric-icon">📜</div>
+            <h5>Charging Session History</h5>
+            <p class="mb-0">Track every session with vehicle details, start %, target %, amount, status, duration, and receipt access.</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="metric-card h-100">
+            <div class="metric-icon">📊</div>
+            <h5>Admin Analytics</h5>
+            <p class="mb-0">See total sessions, total units delivered, active charging sessions, completed sessions, and revenue.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
